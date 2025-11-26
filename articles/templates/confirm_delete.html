@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Article | News Portal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header bg-danger text-white">
+        <h4 class="mb-0">Delete Article</h4>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-warning">
+          <strong>Warning:</strong> This action cannot be undone.
+        </div>
+        <p>Are you sure you want to delete the article:</p>
+        <h5 class="mb-4">“{{ article.title }}”</h5>
+
+        <form method="post" class="d-flex gap-2">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Yes, delete</button>
+          <a href="{% url 'editor_dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
