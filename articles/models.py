@@ -5,8 +5,14 @@ from django.urls import reverse
 
 class CustomUser(AbstractUser):
     """
-    Custom user model with role-based access and subscription relationships.
+    Custom user model extending Django's AbstractUser.
+
+    Adds role-based access control and subscription relationships:
+    - Roles: reader, editor, journalist, publisher.
+    - Readers can subscribe to publishers and journalists.
+    - Publishers, editors, and journalists are linked to publishing workflows.
     """
+
     ROLE_CHOICES = [
         ("reader", "Reader"),
         ("editor", "Editor"),
@@ -46,24 +52,36 @@ class CustomUser(AbstractUser):
         verbose_name_plural = "Users"
 
     def __str__(self):
+        """Return a string representation of the user with role label."""
         return f"{self.username} ({self.get_role_display()})"
 
     def role_label(self):
-        """Return the human-readable role name (safe helper)."""
+        """
+        Return the human-readable role name.
+
+        Returns:
+            str: Display name of the user's role.
+        """
         return dict(self.ROLE_CHOICES).get(self.role, self.role)
 
 
 class Publisher(models.Model):
     """
-    Represents a publishing entity with associated editors and journalists.
+    Represents a publishing entity.
+
+    A publisher has:
+    - An owner (must have role 'publisher').
+    - Associated editors and journalists.
+    - A name and description for identification.
     """
+
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
 
     owner = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
-        related_name="owned_publishers",   # plural, since one user can own many
+        related_name="owned_publishers",
         limit_choices_to={"role": "publisher"},
         help_text="User who owns this publisher (must have role 'publisher')."
     )
@@ -88,16 +106,30 @@ class Publisher(models.Model):
         verbose_name_plural = "Publishers"
 
     def __str__(self):
+        """Return a string representation of the publisher with its owner."""
         return f"{self.name} (Owner: {self.owner.username})"
 
     def get_absolute_url(self):
+        """
+        Return the canonical URL for this publisher.
+
+        Returns:
+            str: URL path to publisher detail view.
+        """
         return reverse("publisher_detail", kwargs={"pk": self.pk})
 
 
 class Article(models.Model):
     """
-    News article submitted by a journalist and optionally approved by an editor.
+    News article submitted by a journalist.
+
+    Articles belong to a publisher and may be approved by an editor.
+    Each article includes:
+    - Title, content, and optional summary.
+    - Author (journalist) and publisher.
+    - Approval status and timestamps.
     """
+
     title = models.CharField(max_length=200)
     content = models.TextField()
     summary = models.CharField(max_length=300, blank=True, help_text="Optional short summary for previews.")
@@ -124,17 +156,31 @@ class Article(models.Model):
         verbose_name_plural = "Articles"
 
     def __str__(self):
+        """Return a string representation of the article with approval status."""
         status = "Approved" if self.approved else "Pending"
         return f"{self.title} ({status})"
 
     def get_absolute_url(self):
+        """
+        Return the canonical URL for this article.
+
+        Returns:
+            str: URL path to article detail view.
+        """
         return reverse("article_detail", kwargs={"pk": self.pk})
 
 
 class Newsletter(models.Model):
     """
     Periodic newsletter authored by a journalist.
+
+    Newsletters include:
+    - Title, content, and optional summary.
+    - Author (journalist).
+    - Related articles (many-to-many).
+    - Creation and update timestamps.
     """
+
     title = models.CharField(max_length=200)
     content = models.TextField()
     summary = models.CharField(max_length=300, blank=True, help_text="Optional short summary for previews.")
@@ -160,10 +206,18 @@ class Newsletter(models.Model):
         verbose_name_plural = "Newsletters"
 
     def __str__(self):
+        """Return a string representation of the newsletter with its author."""
         return f"{self.title} (by {self.author.username})"
 
     def get_absolute_url(self):
+        """
+        Return the canonical URL for this newsletter.
+
+        Returns:
+            str: URL path to newsletter detail view.
+        """
         return reverse("newsletter_detail", kwargs={"pk": self.pk})
+
 
 
 
