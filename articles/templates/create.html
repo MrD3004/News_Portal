@@ -1,0 +1,10 @@
+<!-- templates/articles/create.html -->
+{% extends 'base.html' %}
+{% block content %}
+<h2>Publish New Article</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn btn-success">Publish</button>
+</form>
+{% endblock %}

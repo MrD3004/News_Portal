@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Home | News Portal{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-3">Latest Articles</h2>
+
+  <div class="row">
+    {% for article in articles %}
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">
+              <a href="{% url 'article_detail' article.id %}">
+                {{ article.title }}
+              </a>
+            </h5>
+            <p class="card-subtitle mb-2 text-muted">
+              By {{ article.author.username }}
+              {% if article.publisher %}
+                | {{ article.publisher.name }}
+              {% endif %}
+              | {{ article.created_at|date:"M d, Y" }}
+            </p>
+
+            <p class="card-text">{{ article.content|truncatewords:30 }}</p>
+            <a href="{% url 'article_detail' article.id %}" class="btn btn-primary btn-sm">Read More</a>
+
+            {% if user.is_authenticated and user.role == "reader" %}
+              <div class="mt-2">
+                {# Publisher subscription toggle #}
+                {% if article.publisher %}
+                  {% if article.publisher in subscribed_publishers %}
+                    <form method="post" action="{% url 'unsubscribe_publisher' article.publisher.id %}" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-danger btn-sm">
+                        Unsubscribe {{ article.publisher.name }}
+                      </button>
+                    </form>
+                  {% else %}
+                    <form method="post" action="{% url 'subscribe_publisher' article.publisher.id %}" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-success btn-sm">
+                        Subscribe {{ article.publisher.name }}
+                      </button>
+                    </form>
+                  {% endif %}
+                {% endif %}
+
+                {# Journalist subscription toggle #}
+                {% if article.author in subscribed_journalists %}
+                  <form method="post" action="{% url 'unsubscribe_journalist' article.author.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm">
+                      Unfollow {{ article.author.username }}
+                    </button>
+                  </form>
+                {% else %}
+                  <form method="post" action="{% url 'subscribe_journalist' article.author.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-sm">
+                      Follow {{ article.author.username }}
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-muted">No articles available.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+
